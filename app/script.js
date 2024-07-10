@@ -21,23 +21,12 @@ const chart = new Chart(dollarChart , {
   }
 });
 
-setInterval(connectToAPI, 5000);
-
-async function connectToAPI() {
-  try {
-    const response = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
-    const data = await response.json();
-    const time = getHour();
-    addData({ chart, label: time, data: data.USDBRL.ask });
-    showPrice({ name: 'Dólar', value: data.USDBRL.ask });
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 function getHour() {
-  const date = new Date();
-  return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+  return new Date().toLocaleString('pt-Br', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 }
 
 function addData({ chart, label, data }) {
@@ -47,4 +36,14 @@ function addData({ chart, label, data }) {
     dataset.data.push(data);
   });
   chart.update();
+}
+
+const workerDollar = new Worker('./app/workers/workerDollar.js');
+
+workerDollar.postMessage('');
+
+workerDollar.onmessage = ({ data }) => {
+  const time = getHour();
+  addData({ chart, label: time, data });
+  showPrice({ name: 'Dólar', value: data });
 }
