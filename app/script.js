@@ -1,13 +1,33 @@
-import { showPrice } from "./list.js";
+import { showList } from "./list.js";
 
-const dollarChart = document.getElementById('graficoDolar');
+const dollarChartEl = document.getElementById('graficoDolar');
+const ieneChartEl = document.getElementById('graficoIene');
 
-const chart = new Chart(dollarChart , {
+const dollarChart = new Chart(dollarChartEl, {
   type: 'line',
   data: {
     labels: [],
     datasets: [{
       label: 'Dólar',
+      data: [],
+      borderWidth: 1
+    }]
+  },
+  options: {
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }
+});
+
+const ineneChart = new Chart(ieneChartEl, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Iene',
       data: [],
       borderWidth: 1
     }]
@@ -31,7 +51,6 @@ function getHour() {
 
 function addData({ chart, label, data }) {
   chart.data.labels.push(label);
-  console.log(data)
   chart.data.datasets.forEach((dataset) => {
     dataset.data.push(data);
   });
@@ -39,11 +58,31 @@ function addData({ chart, label, data }) {
 }
 
 const workerDollar = new Worker('./app/workers/workerDollar.js');
+const workerIene = new Worker('./app/workers/workerIene.js');
 
 workerDollar.postMessage('');
+workerIene.postMessage('');
 
 workerDollar.onmessage = ({ data }) => {
   const time = getHour();
-  addData({ chart, label: time, data });
-  showPrice({ name: 'Dólar', value: data });
+  addData({ chart: dollarChart, label: time, data });
+  showList({
+    listId: 'dolar',
+    exhibitionName: {
+      singular: 'dólar',
+      plural: 'dólares'
+    },
+    value: data });
+}
+
+workerIene.onmessage = ({ data }) => {
+  const time = getHour();
+  addData({ chart: ineneChart, label: time, data });
+  showList({
+    listId: 'iene',
+    exhibitionName: {
+      singular: 'ienes',
+      plural: 'ienes'
+    },
+    value: data });
 }
